@@ -11,14 +11,17 @@
 |
 */
 
-$router->get('/', function () use ($router) {
-    return $router->app->version();
+$router->group(['prefix' => 'oauth'], function () use ($router) {
+    $router->get('{driver}', ['as' => 'oauth', 'uses' => 'Auth\OAuthController@redirectToProvider'
+    ]);
+    $router->get('{driver}/callback', ['as' => 'oauth.callback', 'uses' => 'Auth\OAuthController@handleProviderCallback']);
 });
 
-$router->post('auth/login', 'Auth\AuthController@postLogin');
+//$router->get('{path:.*}', function () {
+//    return view('index');
+//});
 
-$router->get('todo', 'TodoController@index');
-$router->post('todo', 'TodoController@store');
-$router->get('todo/{id}', 'TodoController@show');
-$router->put('todo/{id}', 'TodoController@update');
-$router->delete('todo/{id}', 'TodoController@destroy');
+//$router->get('password/reset/{token}', ['as' => 'password.reset', function () {
+//    return view('index');
+//}]);
+

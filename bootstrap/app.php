@@ -1,4 +1,4 @@
-<?php
+    <?php
 
 require_once __DIR__.'/../vendor/autoload.php';
 
@@ -24,7 +24,11 @@ $app = new Laravel\Lumen\Application(
  $app->withFacades();
 
  $app->withEloquent();
-
+$app->configure('app');
+$app->configure('auth');
+$app->configure('database');
+$app->configure('services');
+$app->configure('mail');
 /*
 |--------------------------------------------------------------------------
 | Register Container Bindings
@@ -45,7 +49,11 @@ $app->singleton(
     Illuminate\Contracts\Console\Kernel::class,
     App\Console\Kernel::class
 );
+$app->singleton('mailer', function ($app) {
+    return $app->loadComponent('mail', 'Illuminate\Mail\MailServiceProvider', 'mailer');
+});
 
+$app->alias('mailer', Illuminate\Contracts\Mail\Mailer::class);
 /*
 |--------------------------------------------------------------------------
 | Register Middleware
@@ -64,6 +72,9 @@ $app->singleton(
  $app->routeMiddleware([
      'auth' => App\Http\Middleware\Authenticate::class,
  ]);
+$app->middleware([
+//    App\Http\Middleware\SetLocale::class
+]);
 
 /*
 |--------------------------------------------------------------------------
@@ -76,8 +87,18 @@ $app->singleton(
 |
 */
 
- $app->register(App\Providers\AppServiceProvider::class);
- $app->register(App\Providers\AuthServiceProvider::class);
+$app->register(App\Providers\AppServiceProvider::class);
+$app->register(App\Providers\AuthServiceProvider::class);
+$app->register(App\Providers\AppServiceProvider::class);
+$app->register(Tymon\JWTAuth\Providers\LumenServiceProvider::class);
+$app->register(Vluzrmos\Tinker\TinkerServiceProvider::class);
+$app->register(AlbertCht\Form\FormRequestServiceProvider::class);
+$app->register(Laravel\Socialite\SocialiteServiceProvider::class);
+$app->register(Illuminate\Mail\MailServiceProvider::class);
+$app->register(Illuminate\Auth\Passwords\PasswordResetServiceProvider::class);
+$app->register(Illuminate\Notifications\NotificationServiceProvider::class);
+$app->register(App\Providers\EventServiceProvider::class);
+
 // $app->register(App\Providers\EventServiceProvider::class);
 /*
 |--------------------------------------------------------------------------
@@ -89,6 +110,16 @@ $app->singleton(
 | can respond to, as well as the controllers that may handle them.
 |
 */
+$app->router->group(['prefix' => 'api', 'namespace' => 'App\Http\Controllers\API',
+], function ($router) {
+    require __DIR__.'/../routes/api.php';
+});
+
+$app->router->group(['prefix' => 'api', 'namespace' => 'App\Http\Controllers\API',
+], function ($router) {
+    require __DIR__.'/../routes/todo.php';
+});
+
 
 $app->router->group([
     'namespace' => 'App\Http\Controllers',

@@ -1,8 +1,9 @@
 <?php
 
-namespace App\Http\Controllers\Auth;
+namespace App\Http\Controllers\API\Auth;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Auth\LoginRequest;
 use Illuminate\Http\Request;
 use Tymon\JWTAuth\JWTAuth;
 
@@ -46,5 +47,20 @@ class AuthController extends Controller
         }
 
         return response()->json(compact('token'));
+    }
+
+    /**
+     * Log the user out of the application.
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @return \Illuminate\Http\Response
+     */
+    public function logout(Request $request)
+    {
+        $this->jwt->parseToken()->invalidate();
+
+        return response()->json([
+            'success' => true
+        ]);
     }
 }

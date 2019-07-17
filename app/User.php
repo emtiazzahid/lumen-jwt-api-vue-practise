@@ -3,24 +3,29 @@
 namespace App;
 
 use Illuminate\Auth\Authenticatable;
-use Laravel\Lumen\Auth\Authorizable;
 use Illuminate\Database\Eloquent\Model;
+use Laravel\Lumen\Auth\Authorizable;
 use Illuminate\Contracts\Auth\Authenticatable as AuthenticatableContract;
 use Illuminate\Contracts\Auth\Access\Authorizable as AuthorizableContract;
 use Tymon\JWTAuth\Contracts\JWTSubject;
+use Illuminate\Contracts\Auth\CanResetPassword as ResetPasswordContract;
+use Illuminate\Auth\Passwords\CanResetPassword;
+use Illuminate\Notifications\Notifiable;
+use App\Notifications\ResetPassword as ResetPasswordNotification;
 
-class User extends Model implements JWTSubject, AuthenticatableContract, AuthorizableContract
+class User extends Model implements AuthenticatableContract, AuthorizableContract, JWTSubject, ResetPasswordContract
 {
-    use Authenticatable, Authorizable;
+    use Authenticatable,
+        Authorizable,
+        CanResetPassword,
+        Notifiable;
 
     /**
      * The attributes that are mass assignable.
      *
      * @var array
      */
-    protected $fillable = [
-        'name', 'email',
-    ];
+    protected $guarded = [];
 
     /**
      * The attributes excluded from the model's JSON form.
@@ -39,5 +44,45 @@ class User extends Model implements JWTSubject, AuthenticatableContract, Authori
     public function getJWTCustomClaims()
     {
         return [];
+    }
+
+    /**
+     * The accessors to append to the model's array form.
+     *
+     * @var array
+     */
+    protected $appends = [
+        'photo_url',
+    ];
+
+    /**
+     * Get the profile photo URL attribute.
+     *
+     * @return string
+     */
+    public function getPhotoUrlAttribute()
+    {
+        return 'https://www.gravatar.com/avatar/'.md5(strtolower($this->email)).'.jpg?s=200&d=mm';
+    }
+
+    /**
+     * Get the oauth providers.
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     */
+    public function oauthProviders()
+    {
+        return $this->hasMany(OAuthProvider::class);
+    }
+
+    /**
+     * Send the password reset notification.
+     *
+     * @param  string  $token
+     * @return void
+     */
+    public function sendPasswordResetNotification($token)
+    {
+        $this->notify(new ResetPasswordNotification($token));
     }
 }
